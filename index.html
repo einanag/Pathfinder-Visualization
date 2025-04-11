@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pathfinder Visualization</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input[type="number"] {
+      width: 60px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    select, button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: #4a6ea9;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    select {
+      background-color: white;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+
+    button:hover {
+      background-color: #3a5a89;
+    }
+
+    .grid-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+
+    #grid {
+      display: grid;
+      gap: 1px;
+      background-color: #ddd;
+      border: 1px solid #999;
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      border: 1px solid #ccc;
+    }
+
+    .cell-cost {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      font-size: 10px;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 1px 3px;
+      border-radius: 3px;
+    }
+
+    .start {
+      background-color: #4caf50;
+    }
+
+    .end {
+      background-color: #f44336;
+    }
+
+    .road {
+      background-color: #d3d3d3;
+    }
+
+    .grass {
+      background-color: #a5d6a7;
+    }
+
+    .forest {
+      background-color: #2e7d32;
+    }
+
+    .lake {
+      background-color: #64b5f6;
+    }
+
+    .mountain {
+      background-color: #795548;
+    }
+
+    .obstacle {
+      background-color: #333;
+    }
+
+    .wolf {
+      background-color: #9e9e9e;
+      position: relative;
+    }
+
+    .wolf::after {
+      content: "W";
+      position: absolute;
+      font-weight: bold;
+    }
+
+    .fear {
+      background-color: #ffcdd2;
+      position: relative;
+    }
+
+    .fear::after {
+      content: "F";
+      position: absolute;
+      font-weight: bold;
+    }
+
+    .monument {
+      background-color: #ffeb3b;
+      position: relative;
+    }
+
+    .monument::after {
+      content: "M";
+      position: absolute;
+      font-weight: bold;
+    }
+
+    .temple {
+      background-color: #ffd54f;
+      position: relative;
+    }
+
+    .temple::after {
+      content: "T";
+      position: absolute;
+      font-weight: bold;
+    }
+
+    /* pth styles with animations */
+    .path {
+      animation: pathPulse 1.5s infinite alternate;
+    }
+
+    @keyframes pathPulse {
+      from { opacity: 0.6; }
+      to { opacity: 1; }
+    }
+
+    .depth-first {
+      border: 3px solid #3498db;
+      background-color: rgba(52, 152, 219, 0.3);
+      z-index: 1;
+    }
+
+    .depth-first-empathy {
+      border: 3px dashed #3498db;
+      background-color: rgba(52, 152, 219, 0.2);
+      z-index: 1;
+    }
+
+    .best-first {
+      border: 3px solid #2ecc71;
+      background-color: rgba(46, 204, 113, 0.3);
+      z-index: 1;
+    }
+
+    .best-first-empathy {
+      border: 3px dashed #2ecc71;
+      background-color: rgba(46, 204, 113, 0.2);
+      z-index: 1;
+    }
+
+    .a-star {
+      border: 3px solid #e74c3c;
+      background-color: rgba(231, 76, 60, 0.3);
+      z-index: 1;
+    }
+
+    .a-star-empathy {
+      border: 3px dashed #e74c3c;
+      background-color: rgba(231, 76, 60, 0.2);
+      z-index: 1;
+    }
+
+    .legend {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #eee;
+    }
+
+    .legend h3 {
+      margin-bottom: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .legend-color {
+      width: 30px;
+      height: 30px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+    }
+
+    .path-legend {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .path-color {
+      width: 30px;
+      height: 15px;
+      margin-right: 10px;
+    }
+
+    .results {
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #eee;
+    }
+
+    .algorithm-results {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .algorithm-result {
+      flex: 1;
+      min-width: 250px;
+      padding: 10px;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .algorithm-result h4 {
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .repulsion-aura-1 {
+      background-color: rgba(255, 0, 0, 0.1);
+    }
+
+    .repulsion-aura-2 {
+      background-color: rgba(255, 0, 0, 0.2);
+    }
+
+    .repulsion-aura-3 {
+      background-color: rgba(255, 0, 0, 0.3);
+    }
+
+    .attraction-aura-1 {
+      background-color: rgba(0, 255, 0, 0.1);
+    }
+
+    .attraction-aura-2 {
+      background-color: rgba(0, 255, 0, 0.2);
+    }
+
+    .attraction-aura-3 {
+      background-color: rgba(0, 255, 0, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+      }
+      
+      .cell {
+        width: 30px;
+        height: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pathfinder Visualization</h1>
+    
+    <div class="controls">
+      <div class="control-group">
+        <label for="rows">Rows:</label>
+        <input type="number" id="rows" min="5" max="30" value="15">
+        
+        <label for="cols">Columns:</label>
+        <input type="number" id="cols" min="5" max="30" value="15">
+        
+        <button id="generate-map">Generate Map</button>
+      </div>
+      
+      <div class="control-group">
+        <label>Select Tool:</label>
+        <select id="tool-selector">
+          <option value="start">Set Start</option>
+          <option value="end">Set End</option>
+          <option value="road">Road (Cost: 11)</option>
+          <option value="grass">Grass (Cost: 12)</option>
+          <option value="forest">Forest (Cost: 13)</option>
+          <option value="lake">Lake (Cost: 15)</option>
+          <option value="mountain">Mountain (Cost: 17)</option>
+          <option value="obstacle">Obstacle</option>
+          <option value="wolf">Wolf (Repulsion)</option>
+          <option value="fear">Fear Area (Repulsion)</option>
+          <option value="monument">Monument (Attraction)</option>
+          <option value="temple">Temple (Attraction)</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <button id="clear-map">Clear Map</button>
+        <button id="run-algorithms">Run Algorithms</button>
+        <button id="toggle-empathy">Toggle Empathy Map</button>
+      </div>
+      
+      <div class="control-group">
+        <button id="run-depth-first">Run Depth First Search</button>
+        <button id="run-best-first">Run Best First Search</button>
+        <button id="run-a-star">Run A* Algorithm</button>
+        <button id="clear-paths">Clear Paths</button>
+        <button id="animate-paths">Animate Paths</button>
+      </div>
+    </div>
+    
+    <div class="grid-container">
+      <div id="grid"></div>
+    </div>
+    
+    <div class="legend">
+      <h3>Legend</h3>
+      <div class="legend-item">
+        <div class="legend-color start"></div>
+        <span>Start</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color end"></div>
+        <span>End</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color road"></div>
+        <span>Road (Cost: 11)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color grass"></div>
+        <span>Grass (Cost: 12)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color forest"></div>
+        <span>Forest (Cost: 13)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color lake"></div>
+        <span>Lake (Cost: 15)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color mountain"></div>
+        <span>Mountain (Cost: 17)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color obstacle"></div>
+        <span>Obstacle</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color wolf"></div>
+        <span>Wolf (Repulsion)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color fear"></div>
+        <span>Fear Area (Repulsion)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color monument"></div>
+        <span>Monument (Attraction)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color temple"></div>
+        <span>Temple (Attraction)</span>
+      </div>
+    </div>
+    
+    <div class="results">
+      <h3>Results</h3>
+      <div class="algorithm-results">
+        <div class="algorithm-result">
+          <h4>Depth First Search</h4>
+          <div class="path-legend">
+            <div class="path-color depth-first"></div>
+            <span>Without Empathy</span>
+          </div>
+          <div class="path-legend">
+            <div class="path-color depth-first-empathy"></div>
+            <span>With Empathy</span>
+          </div>
+          <div id="depth-first-stats"></div>
+        </div>
+        
+        <div class="algorithm-result">
+          <h4>Best First Search</h4>
+          <div class="path-legend">
+            <div class="path-color best-first"></div>
+            <span>Without Empathy</span>
+          </div>
+          <div class="path-legend">
+            <div class="path-color best-first-empathy"></div>
+            <span>With Empathy</span>
+          </div>
+          <div id="best-first-stats"></div>
+        </div>
+        
+        <div class="algorithm-result">
+          <h4>A* Algorithm</h4>
+          <div class="path-legend">
+            <div class="path-color a-star"></div>
+            <span>Without Empathy</span>
+          </div>
+          <div class="path-legend">
+            <div class="path-color a-star-empathy"></div>
+            <span>With Empathy</span>
+          </div>
+          <div id="a-star-stats"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Global variables
+    let grid = [];
+    let rows = 15;
+    let cols = 15;
+    let startCell = null;
+    let endCell = null;
+    let currentTool = 'start';
+    let showEmpathyMap = false;
+    let algorithmResults = {
+      'depth-first': { normal: null, empathy: null },
+      'best-first': { normal: null, empathy: null },
+      'a-star': { normal: null, empathy: null }
+    };
+
+    // Terrain costs
+    const terrainCosts = {
+      'road': 11,
+      'grass': 12,
+      'forest': 13,
+      'lake': 15,
+      'mountain': 17,
+      'obstacle': Infinity,
+      'start': 0,
+      'end': 0,
+      'wolf': 0,
+      'fear': 0,
+      'monument': 0,
+      'temple': 0
+    };
+
+    // Empathy values
+    const empathyValues = {
+      'wolf': { type: 'repulsion', value: 10, radius: 3 },
+      'fear': { type: 'repulsion', value: 8, radius: 3 },
+      'monument': { type: 'attraction', value: -8, radius: 3 },
+      'temple': { type: 'attraction', value: -10, radius: 3 }
+    };
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded');
+      
+      
+      document.getElementById('generate-map').addEventListener('click', generateMap);
+      document.getElementById('clear-map').addEventListener('click', clearMap);
+      document.getElementById('run-algorithms').addEventListener('click', runAlgorithms);
+      document.getElementById('toggle-empathy').addEventListener('click', toggleEmpathyMap);
+      document.getElementById('tool-selector').addEventListener('change', (e) => {
+        currentTool = e.target.value;
+        console.log('Tool changed to:', currentTool);
+      });
+      
+      
+      document.getElementById('run-depth-first').addEventListener('click', () => runSingleAlgorithm('depth-first'));
+      document.getElementById('run-best-first').addEventListener('click', () => runSingleAlgorithm('best-first'));
+      document.getElementById('run-a-star').addEventListener('click', () => runSingleAlgorithm('a-star'));
+      
+      // Add event listeners for new buttons
+	  // Generate initial map
+	  // Generate the grid
+	  
+      document.getElementById('clear-paths').addEventListener('click', clearPaths);
+      document.getElementById('animate-paths').addEventListener('click', animateAllPaths);
+      generateMap();
+    });
+
+    function generateMap() {
+      console.log('Generating map');
+      rows = parseInt(document.getElementById('rows').value);
+      cols = parseInt(document.getElementById('cols').value);
+      
+     
+      if (rows < 5 || rows > 30 || cols < 5 || cols > 30) {
+        alert('Rows and columns must be between 5 and 30');
+        return;
+      }
+      
+      
+      grid = [];
+      startCell = null;
+      endCell = null;
+      
+      
+      const gridElement = document.getElementById('grid');
+      gridElement.innerHTML = '';
+      gridElement.style.gridTemplateColumns = `repeat(${cols}, 40px)`;
+      gridElement.style.gridTemplateRows = `repeat(${rows}, 40px)`;
+      
+     
+      for (let i = 0; i < rows; i++) {
+        grid[i] = [];
+        for (let j = 0; j < cols; j++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell grass';
+          cell.dataset.row = i;
+          cell.dataset.col = j;
+          
+          
+          grid[i][j] = {
+            element: cell,
+            row: i,
+            col: j,
+            terrain: 'grass',
+            cost: terrainCosts['grass'],
+            empathyCost: 0,
+            totalCost: terrainCosts['grass'],
+            isStart: false,
+            isEnd: false,
+            isObstacle: false
+          };
+          
+          
+          const costElement = document.createElement('div');
+          costElement.className = 'cell-cost';
+          costElement.textContent = terrainCosts['grass'];
+          cell.appendChild(costElement);            
+          cell.addEventListener('click', function() {
+            handleCellClick(i, j);
+          });
+          
+          gridElement.appendChild(cell);
+        }
+      }
+      
+
+      clearResults();
+    }
+	
+    function handleCellClick(row, col) {
+      console.log('Cell clicked:', row, col);
+      const cell = grid[row][col];
+      
+      // Handle start and end points
+      if (currentTool === 'start') {
+        if (startCell) {
+          startCell.element.classList.remove('start');
+          startCell.isStart = false;
+          startCell.terrain = 'grass';
+          startCell.cost = terrainCosts['grass'];
+          startCell.totalCost = startCell.cost + startCell.empathyCost;
+          updateCellDisplay(startCell);
+        }
+        
+        cell.element.className = 'cell start';
+        cell.isStart = true;
+        cell.terrain = 'start';
+        cell.cost = 0;
+        cell.totalCost = 0;
+        startCell = cell;
+        updateCellDisplay(cell);
+        return;
+      }
+      
+      if (currentTool === 'end') {
+        if (endCell) {
+          endCell.element.classList.remove('end');
+          endCell.isEnd = false;
+          endCell.terrain = 'grass';
+          endCell.cost = terrainCosts['grass'];
+          endCell.totalCost = endCell.cost + endCell.empathyCost;
+          updateCellDisplay(endCell);
+        }
+        
+        cell.element.className = 'cell end';
+        cell.isEnd = true;
+        cell.terrain = 'end';
+        cell.cost = 0;
+        cell.totalCost = 0;
+        endCell = cell;
+        updateCellDisplay(cell);
+        return;
+      }
+      
+      //  terrain and special elements
+      if (cell.isStart || cell.isEnd) {
+        return; // Don't change start or end cells
+      }
+      
+      // removing previous terrain class
+      cell.element.classList.remove(cell.terrain);
+      
+      // setting new terrain
+      cell.terrain = currentTool;
+      cell.element.classList.add(currentTool);
+      
+      // updating cost
+      cell.cost = terrainCosts[currentTool];
+      cell.isObstacle = currentTool === 'obstacle';
+      
+      // if it's an empathy element,then  calculate auras
+      if (['wolf', 'fear', 'monument', 'temple'].includes(currentTool)) {
+        calculateEmpathyAuras();
+      }
+      
+      updateCellDisplay(cell);
+      
+      clearResults();
+    }
+
+    function updateCellDisplay(cell) {
+
+      const costElement = cell.element.querySelector('.cell-cost');
+      
+      if (cell.isObstacle) {
+        costElement.textContent = '∞';
+      } else if (cell.isStart || cell.isEnd) {
+        costElement.textContent = '0';
+      } else {
+        if (showEmpathyMap) {
+          costElement.textContent = cell.totalCost;
+        } else {
+          costElement.textContent = cell.cost;
+        }
+      }
+      
+      
+      if (showEmpathyMap) {
+        
+        cell.element.classList.remove('repulsion-aura-1', 'repulsion-aura-2', 'repulsion-aura-3', 
+                                     'attraction-aura-1', 'attraction-aura-2', 'attraction-aura-3');
+        
+        
+        if (cell.empathyCost > 0) {
+          if (cell.empathyCost >= 7) {
+            cell.element.classList.add('repulsion-aura-3');
+          } else if (cell.empathyCost >= 4) {
+            cell.element.classList.add('repulsion-aura-2');
+          } else if (cell.empathyCost >= 1) {
+            cell.element.classList.add('repulsion-aura-1');
+          }
+        } else if (cell.empathyCost < 0) {
+          if (cell.empathyCost <= -7) {
+            cell.element.classList.add('attraction-aura-3');
+          } else if (cell.empathyCost <= -4) {
+            cell.element.classList.add('attraction-aura-2');
+          } else if (cell.empathyCost <= -1) {
+            cell.element.classList.add('attraction-aura-1');
+          }
+        }
+      } else {
+        
+        cell.element.classList.remove('repulsion-aura-1', 'repulsion-aura-2', 'repulsion-aura-3', 
+                                     'attraction-aura-1', 'attraction-aura-2', 'attraction-aura-3');
+      }
+    }
+
+    
+    function calculateEmpathyAuras() {
+      
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          grid[i][j].empathyCost = 0;
+        }
+      }
+      
+      
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          const cell = grid[i][j];
+          if (['wolf', 'fear', 'monument', 'temple'].includes(cell.terrain)) {
+            const empathyInfo = empathyValues[cell.terrain];
+            
+            
+            for (let r = 0; r < rows; r++) {
+              for (let c = 0; c < cols; c++) {
+                const targetCell = grid[r][c];
+                const distance = Math.sqrt(Math.pow(r - i, 2) + Math.pow(c - j, 2));
+                
+                if (distance <= empathyInfo.radius) {
+                 
+                  const effect = Math.round(empathyInfo.value * (1 - distance / (empathyInfo.radius + 1)));
+                  
+                  if (empathyInfo.type === 'repulsion') {
+                    targetCell.empathyCost += effect;
+                  } else {
+                    targetCell.empathyCost += effect; 
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          const cell = grid[i][j];
+          cell.totalCost = cell.cost + cell.empathyCost;
+          
+          
+          if (cell.totalCost < 1 && !cell.isStart && !cell.isEnd && !cell.isObstacle) {
+            cell.totalCost = 1;
+          }
+          
+          updateCellDisplay(cell);
+        }
+      }
+    }
+
+    // Toggle empathy map display
+    function toggleEmpathyMap() {
+      showEmpathyMap = !showEmpathyMap;
+      
+      
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          updateCellDisplay(grid[i][j]);
+        }
+      }
+      
+      const button = document.getElementById('toggle-empathy');
+      button.textContent = showEmpathyMap ? 'Hide Empathy Map' : 'Show Empathy Map';
+    }
+
+    function clearMap() {
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          const cell = grid[i][j];
+          
+          cell.element.className = 'cell grass';
+          cell.terrain = 'grass';
+          cell.cost = terrainCosts['grass'];
+          cell.empathyCost = 0;
+          cell.totalCost = cell.cost;
+          cell.isStart = false;
+          cell.isEnd = false;
+          cell.isObstacle = false;
+          
+          updateCellDisplay(cell);
+        }
+      }
+        
+      startCell = null;
+      endCell = null;
+      
+      clearResults();
+    }
+
+    function clearResults() {
+      algorithmResults = {
+        'depth-first': { normal: null, empathy: null },
+        'best-first': { normal: null, empathy: null },
+        'a-star': { normal: null, empathy: null }
+      };
+      
+      clearPaths();
+
+      document.getElementById('depth-first-stats').innerHTML = '';
+      document.getElementById('best-first-stats').innerHTML = '';
+      document.getElementById('a-star-stats').innerHTML = '';
+    }
+
+    function clearPaths() {
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          if (grid[i] && grid[i][j] && grid[i][j].element) {
+            grid[i][j].element.classList.remove('depth-first', 'depth-first-empathy', 
+                                 'best-first', 'best-first-empathy', 
+                                 'a-star', 'a-star-empathy', 'path');
+          }
+        }
+      }
+    }
+
+    function runAlgorithms() {
+      if (!startCell || !endCell) {
+        alert('Please set start and end points first');
+        return;
+      }
+      
+
+      clearResults();
+  
+      algorithmResults['depth-first'].normal = depthFirstSearch(false);
+      algorithmResults['best-first'].normal = bestFirstSearch(false);
+      algorithmResults['a-star'].normal = aStarSearch(false);
+      
+      
+      algorithmResults['depth-first'].empathy = depthFirstSearch(true);
+      algorithmResults['best-first'].empathy = bestFirstSearch(true);
+      algorithmResults['a-star'].empathy = aStarSearch(true);
+      
+  
+      displayResults('depth-first', algorithmResults['depth-first'].normal, algorithmResults['depth-first'].empathy);
+      displayResults('best-first', algorithmResults['best-first'].normal, algorithmResults['best-first'].empathy);
+      displayResults('a-star', algorithmResults['a-star'].normal, algorithmResults['a-star'].empathy);
+      
+      visualizePaths();
+    }
+
+    function displayResults(algorithm, normalResult, empathyResult) {
+      const statsElement = document.getElementById(`${algorithm}-stats`);
+      
+      let html = '<table style="width:100%; border-collapse: collapse; margin-top: 10px;">';
+      html += '<tr><th style="text-align:left; padding: 5px; border-bottom: 1px solid #ddd;"></th><th style="text-align:right; padding: 5px; border-bottom: 1px solid #ddd;">Without Empathy</th><th style="text-align:right; padding: 5px; border-bottom: 1px solid #ddd;">With Empathy</th></tr>';
+      
+      html += `<tr><td style="padding: 5px;">Path Found</td><td style="text-align:right; padding: 5px;">${normalResult.pathFound ? 'Yes' : 'No'}</td><td style="text-align:right; padding: 5px;">${empathyResult.pathFound ? 'Yes' : 'No'}</td></tr>`;
+     
+      html += `<tr><td style="padding: 5px;">Path Length</td><td style="text-align:right; padding: 5px;">${normalResult.pathFound ? normalResult.path.length : 'N/A'}</td><td style="text-align:right; padding: 5px;">${empathyResult.pathFound ? empathyResult.path.length : 'N/A'}</td></tr>`;
+      
+      html += `<tr><td style="padding: 5px;">Path Cost</td><td style="text-align:right; padding: 5px;">${normalResult.pathFound ? normalResult.cost : 'N/A'}</td><td style="text-align:right; padding: 5px;">${empathyResult.pathFound ? empathyResult.cost : 'N/A'}</td></tr>`;
+      
+      html += `<tr><td style="padding: 5px;">Nodes Explored</td><td style="text-align:right; padding: 5px;">${normalResult.nodesExplored}</td><td style="text-align:right; padding: 5px;">${empathyResult.nodesExplored}</td></tr>`;
+      
+      html += '</table>';
+   
+      statsElement.innerHTML = html;
+    }
+
+    function visualizePaths() {
+      
+      if (algorithmResults['depth-first'].normal.pathFound) {
+        for (const { row, col } of algorithmResults['depth-first'].normal.path) {
+          if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+            grid[row][col].element.classList.add('depth-first');
+          }
+        }
+      }
+      
+      if (algorithmResults['depth-first'].empathy.pathFound) {
+        for (const { row, col } of algorithmResults['depth-first'].empathy.path) {
+          if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+            grid[row][col].element.classList.add('depth-first-empathy');
+          }
+        }
+      }
+      
+      if (algorithmResults['best-first'].normal.pathFound) {
+        for (const { row, col } of algorithmResults['best-first'].normal.path) {
+          if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+            grid[row][col].element.classList.add('best-first');
+          }
+        }
+      }
+      
+      if (algorithmResults['best-first'].empathy.pathFound) {
+        for (const { row, col } of algorithmResults['best-first'].empathy.path) {
+          if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+            grid[row][col].element.classList.add('best-first-empathy');
+          }
+        }
+      }
+      
+      if (algorithmResults['a-star'].normal.pathFound) {
+        for (const { row, col } of algorithmResults['a-star'].normal.path) {
+          if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+            grid[row][col].element.classList.add('a-star');
+          }
+        }
+      }
+      
+      if (algorithmResults['a-star'].empathy.pathFound) {
+        for (const { row, col } of algorithmResults['a-star'].empathy.path) {
+          if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+            grid[row][col].element.classList.add('a-star-empathy');
+          }
+        }
+      }
+    }
+
+   
+    function runSingleAlgorithm(algorithm) {
+      if (!startCell || !endCell) {
+        alert('Please set start and end points first');
+        return;
+      }
+
+      clearPaths();
+	  
+      if (algorithm === 'depth-first') {
+        algorithmResults['depth-first'].normal = depthFirstSearch(false);
+        algorithmResults['depth-first'].empathy = depthFirstSearch(true);
+        displayResults('depth-first', algorithmResults['depth-first'].normal, algorithmResults['depth-first'].empathy);
+      } else if (algorithm === 'best-first') {
+        algorithmResults['best-first'].normal = bestFirstSearch(false);
+        algorithmResults['best-first'].empathy = bestFirstSearch(true);
+        displayResults('best-first', algorithmResults['best-first'].normal, algorithmResults['best-first'].empathy);
+      } else if (algorithm === 'a-star') {
+        algorithmResults['a-star'].normal = aStarSearch(false);
+        algorithmResults['a-star'].empathy = aStarSearch(true);
+        displayResults('a-star', algorithmResults['a-star'].normal, algorithmResults['a-star'].empathy);
+      }
+      
+
+      if (algorithm === 'depth-first') {
+        animatePath(algorithmResults['depth-first'].normal.path, 'depth-first', false);
+        setTimeout(() => {
+          animatePath(algorithmResults['depth-first'].empathy.path, 'depth-first', true);
+        }, 500);
+      } else if (algorithm === 'best-first') {
+        animatePath(algorithmResults['best-first'].normal.path, 'best-first', false);
+        setTimeout(() => {
+          animatePath(algorithmResults['best-first'].empathy.path, 'best-first', true);
+        }, 500);
+      } else if (algorithm === 'a-star') {
+        animatePath(algorithmResults['a-star'].normal.path, 'a-star', false);
+        setTimeout(() => {
+          animatePath(algorithmResults['a-star'].empathy.path, 'a-star', true);
+        }, 500);
+      }
+    }
+
+
+    function animateAllPaths() {
+
+      if (!algorithmResults['depth-first'].normal || !algorithmResults['best-first'].normal || !algorithmResults['a-star'].normal) {
+
+        if (!startCell || !endCell) {
+          alert('Please set start and end points first');
+          return;
+        }
+        
+ 
+        algorithmResults['depth-first'].normal = depthFirstSearch(false);
+        algorithmResults['best-first'].normal = bestFirstSearch(false);
+        algorithmResults['a-star'].normal = aStarSearch(false);
+   
+        algorithmResults['depth-first'].empathy = depthFirstSearch(true);
+        algorithmResults['best-first'].empathy = bestFirstSearch(true);
+        algorithmResults['a-star'].empathy = aStarSearch(true);
+
+        displayResults('depth-first', algorithmResults['depth-first'].normal, algorithmResults['depth-first'].empathy);
+        displayResults('best-first', algorithmResults['best-first'].normal, algorithmResults['best-first'].empathy);
+        displayResults('a-star', algorithmResults['a-star'].normal, algorithmResults['a-star'].empathy);
+      }
+      
+      clearPaths();
+      
+      setTimeout(() => {
+        if (algorithmResults['depth-first'].normal.pathFound) {
+          animatePath(algorithmResults['depth-first'].normal.path, 'depth-first', false);
+        }
+      }, 0);
+      
+      setTimeout(() => {
+        if (algorithmResults['depth-first'].empathy.pathFound) {
+          animatePath(algorithmResults['depth-first'].empathy.path, 'depth-first', true);
+        }
+      }, 500);
+      
+      setTimeout(() => {
+        if (algorithmResults['best-first'].normal.pathFound) {
+          animatePath(algorithmResults['best-first'].normal.path, 'best-first', false);
+        }
+      }, 1000);
+      
+      setTimeout(() => {
+        if (algorithmResults['best-first'].empathy.pathFound) {
+          animatePath(algorithmResults['best-first'].empathy.path, 'best-first', true);
+        }
+      }, 1500);
+      
+      setTimeout(() => {
+        if (algorithmResults['a-star'].normal.pathFound) {
+          animatePath(algorithmResults['a-star'].normal.path, 'a-star', false);
+        }
+      }, 2000);
+      
+      setTimeout(() => {
+        if (algorithmResults['a-star'].empathy.pathFound) {
+          animatePath(algorithmResults['a-star'].empathy.path, 'a-star', true);
+        }
+      }, 2500);
+    }
+
+    function animatePath(path, algorithm, useEmpathy) {
+      if (!path || path.length === 0) return;
+      
+      const className = useEmpathy ? `${algorithm}-empathy` : algorithm;
+      let index = 0;
+      
+      function animateStep() {
+        if (index < path.length) {
+          const { row, col } = path[index];
+          if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+            grid[row][col].element.classList.add(className);
+            grid[row][col].element.classList.add('path'); 
+          }
+          index++;
+          setTimeout(animateStep, 50); 
+        }
+      }
+      
+      animateStep();
+    }
+
+    function depthFirstSearch(useEmpathy) {
+      
+      const visited = Array(rows).fill().map(() => Array(cols).fill(false));
+      const path = [];
+      let pathFound = false;
+      let nodesExplored = 0;
+      let totalCost = 0;
+      
+   
+      function dfs(row, col, currentPath, currentCost) {
+        
+        if (row < 0 || row >= rows || col < 0 || col >= cols || 
+            visited[row][col] || grid[row][col].isObstacle) {
+          return false;
+        }
+        
+        
+        visited[row][col] = true;
+        nodesExplored++;
+        
+        
+        currentPath.push({ row, col });
+        
+      
+        const cell = grid[row][col];
+        const cellCost = useEmpathy ? cell.totalCost : cell.cost;
+        currentCost += cellCost;   
+    
+        if (cell.isEnd) {
+          pathFound = true;
+          path.push(...currentPath);
+          totalCost = currentCost;
+          return true;
+        }
+       
+        const directions = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+        
+        for (const [dr, dc] of directions) {
+          if (dfs(row + dr, col + dc, [...currentPath], currentCost)) {
+            return true;
+          }
+        }
+        
+        return false;
+      }
+      
+      dfs(startCell.row, startCell.col, [], 0);  
+ 
+      return {
+        pathFound,
+        path,
+        cost: totalCost,
+        nodesExplored
+      };
+    }
+
+    function bestFirstSearch(useEmpathy) {
+ 
+      const visited = Array(rows).fill().map(() => Array(cols).fill(false));
+      const path = [];
+      let pathFound = false;
+      let nodesExplored = 0;
+      let totalCost = 0;
+     
+      const queue = [];
+      
+      // Heuristic function (Manhattan distance)
+      function heuristic(row, col) {
+        return Math.abs(row - endCell.row) + Math.abs(col - endCell.col);
+      }
+         
+      queue.push({
+        row: startCell.row,
+        col: startCell.col,
+        priority: heuristic(startCell.row, startCell.col),
+        path: [],
+        cost: 0
+      });
+      
+      
+      while (queue.length > 0) {
+        
+        queue.sort((a, b) => a.priority - b.priority);
+    
+        const { row, col, path: currentPath, cost: currentCost } = queue.shift();
+        
+        if (visited[row][col] || grid[row][col].isObstacle) {
+          continue;
+        }
+       
+        visited[row][col] = true;
+        nodesExplored++;
+       
+        const newPath = [...currentPath, { row, col }];
+        
+        const cell = grid[row][col];
+        const cellCost = useEmpathy ? cell.totalCost : cell.cost;
+        const newCost = currentCost + cellCost;
+        
+        
+        if (cell.isEnd) {
+          pathFound = true;
+          path.push(...newPath);
+          totalCost = newCost;
+          break;
+        }
+        
+        
+        const directions = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+        
+        for (const [dr, dc] of directions) {
+          const newRow = row + dr;
+          const newCol = col + dc;
+         
+          if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && 
+              !visited[newRow][newCol] && !grid[newRow][newCol].isObstacle) {
+            
+           
+            queue.push({
+              row: newRow,
+              col: newCol,
+              priority: heuristic(newRow, newCol),
+              path: newPath,
+              cost: newCost
+            });
+          }
+        }
+      }
+     
+      return {
+        pathFound,
+        path,
+        cost: totalCost,
+        nodesExplored
+      };
+    }
+
+    // A* Search 
+    function aStarSearch(useEmpathy) {
+      
+      const visited = Array(rows).fill().map(() => Array(cols).fill(false));
+      const path = [];
+      let pathFound = false;
+      let nodesExplored = 0;
+      let totalCost = 0;
+      
+      
+      const queue = [];
+      
+      function heuristic(row, col) {
+        return Math.abs(row - endCell.row) + Math.abs(col - endCell.col);
+      }
+      
+      queue.push({
+        row: startCell.row,
+        col: startCell.col,
+        f: heuristic(startCell.row, startCell.col),
+        g: 0,
+        path: [],
+      });
+      
+      
+      while (queue.length > 0) {
+        
+        queue.sort((a, b) => a.f - b.f);
+        
+        const { row, col, g: currentCost, path: currentPath } = queue.shift();
+        
+        if (visited[row][col] || grid[row][col].isObstacle) {
+          continue;
+        }
+        
+        
+        visited[row][col] = true;
+        nodesExplored++;
+        
+       
+        const newPath = [...currentPath, { row, col }];
+        
+        
+        if (grid[row][col].isEnd) {
+          pathFound = true;
+          path.push(...newPath);
+          totalCost = currentCost;
+          break;
+        }
+        
+        
+        const directions = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+        
+        for (const [dr, dc] of directions) {
+          const newRow = row + dr;
+          const newCol = col + dc;
+          
+          
+          if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && 
+              !visited[newRow][newCol] && !grid[newRow][newCol].isObstacle) {
+            
+           
+            const cell = grid[newRow][newCol];
+            const cellCost = useEmpathy ? cell.totalCost : cell.cost;
+            const g = currentCost + cellCost;
+            const h = heuristic(newRow, newCol);
+            const f = g + h;
+            
+            
+            queue.push({
+              row: newRow,
+              col: newCol,
+              f: f,
+              g: g,
+              path: newPath
+            });
+          }
+        }
+      }
+      
+      
+      return {
+        pathFound,
+        path,
+        cost: totalCost,
+        nodesExplored
+      };
+    }
+  </script>
+</body>
+</html>
+
