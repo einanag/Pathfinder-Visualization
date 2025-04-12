@@ -129,7 +129,7 @@ button:hover {
 
 /*animated paths */
 .path {
-  background-color: rgba(255, 223, 0, 0.4) !important; 
+  background-color: rgba(255, 223, 0, 0.4) !important;
   border: 2px solid #ffd700 !important;
   animation: pathPulse 1.5s infinite alternate;
 }
@@ -145,7 +145,7 @@ button:hover {
   }
 }
 
-/*  algorithms, path styles for each */
+/*  algorithms, path styles */
 .depth-first {
   background-color: rgba(52, 152, 219, 0.5) !important;
   border: 3px solid #2980b9 !important;
@@ -182,7 +182,7 @@ button:hover {
   z-index: 1;
 }
 
-/* colors,  terrain costs */ 
+/* colors,  terrain costs */
 
 .start {
   background-color: #4caf50;
@@ -361,4 +361,3 @@ button:hover {
     height: 30px;
   }
 }
-
