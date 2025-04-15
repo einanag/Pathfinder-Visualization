@@ -1,7 +1,7 @@
 // global variables
 const grid = [];
-let rows = 15;
-let cols = 15;
+let rows = 10;
+let cols = 10;
 let startCell = null;
 let endCell = null;
 let currentTool = "start";
@@ -73,7 +73,6 @@ function setupEventListeners() {
     .addEventListener("click", animateAllPaths);
 }
 
-// grid and map functions
 function generateMap() {
   rows = parseInt(document.getElementById("rows").value);
   cols = parseInt(document.getElementById("cols").value);
@@ -104,13 +103,6 @@ function generateMap() {
   clearResults();
 }
 
-/**
- * Creates a new cell element with the specified row and column.
- *
- * @param {number} row - The row index of the cell.
- * @param {number} col - The column index of the cell.
- * @return {object} An object representing the cell, containing its element, row, column, terrain, cost, empathy cost, total cost, and start/end/obstacle status.
- */
 function createCell(row, col) {
   const cellElement = document.createElement("div");
   cellElement.className = "cell grass";
@@ -123,6 +115,10 @@ function createCell(row, col) {
   cellElement.appendChild(costElement);
 
   cellElement.addEventListener("click", () => handleCellClick(row, col));
+  cellElement.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    handleCellClick(row, col);
+  });
 
   return {
     element: cellElement,
@@ -138,7 +134,6 @@ function createCell(row, col) {
   };
 }
 
-// cell and path functions
 function handleCellClick(row, col) {
   const cell = grid[row][col];
 
@@ -198,16 +193,13 @@ function resetCellToGrass(cell) {
   updateCellDisplay(cell);
 }
 
-// empathy functions
 function calculateEmpathyAuras() {
-  // Reset all empathy costs
   grid.forEach((row) =>
     row.forEach((cell) => {
       cell.empathyCost = 0;
     })
   );
 
-  // calculate new empathy effects
   grid.forEach((row, i) =>
     row.forEach((cell, j) => {
       if (["wolf", "fear", "monument", "temple"].includes(cell.terrain)) {
@@ -216,7 +208,6 @@ function calculateEmpathyAuras() {
     })
   );
 
-  // updating total costs
   grid.forEach((row) =>
     row.forEach((cell) => {
       cell.totalCost = Math.max(1, cell.cost + cell.empathyCost);
@@ -249,7 +240,6 @@ function toggleEmpathyMap() {
   button.textContent = showEmpathyMap ? "Hide Empathy Map" : "Show Empathy Map";
 }
 
-// Display Functions
 function updateCellDisplay(cell) {
   const costElement = cell.element.querySelector(".cell-cost");
 
@@ -290,7 +280,6 @@ function updateAuraClasses(cell) {
   }
 }
 
-// pathfinding algorithms
 function depthFirstSearch(useEmpathy) {
   const visited = Array(rows)
     .fill()
@@ -300,15 +289,6 @@ function depthFirstSearch(useEmpathy) {
   let nodesExplored = 0;
   let totalCost = 0;
 
-  /**
-   * Performs a depth-first search on the grid, exploring neighboring cells in all four directions.
-   *
-   * @param {number} row - The current row index.
-   * @param {number} col - The current column index.
-   * @param {array} currentPath - The current path being explored.
-   * @param {number} currentCost - The current total cost of the path.
-   * @return {boolean} True if the end cell is found, false otherwise.
-   */
   function dfs(row, col, currentPath, currentCost) {
     if (
       row < 0 ||
@@ -352,12 +332,6 @@ function depthFirstSearch(useEmpathy) {
   return { pathFound, path, cost: totalCost, nodesExplored };
 }
 
-/**
- * Performs a best-first search on the grid to find the shortest path from the start cell to the end cell.
- *
- * @param {boolean} useEmpathy - Whether to use empathy costs or regular costs for the search.
- * @return {object} An object containing the result of the search, including whether a path was found, the path itself, the total cost of the path, and the number of nodes explored.
- */
 function bestFirstSearch(useEmpathy) {
   const visited = Array(rows)
     .fill()
@@ -368,13 +342,6 @@ function bestFirstSearch(useEmpathy) {
   let totalCost = 0;
   const queue = [];
 
-  /**
-   * Calculates the Manhattan distance heuristic for a given cell.
-   *
-   * @param {number} row - The row index of the cell.
-   * @param {number} col - The column index of the cell.
-   * @return {number} The Manhattan distance from the cell to the end cell.
-   */
   function heuristic(row, col) {
     return Math.abs(row - endCell.row) + Math.abs(col - endCell.col);
   }
@@ -444,12 +411,6 @@ function bestFirstSearch(useEmpathy) {
   return { pathFound, path, cost: totalCost, nodesExplored };
 }
 
-/**
- * Performs an A* search on the grid to find the shortest path from the start cell to the end cell.
- *
- * @param {boolean} useEmpathy - Whether to use empathy costs or regular costs for the search.
- * @return {object} An object containing the result of the search, including whether a path was found, the path itself, the total cost of the path, and the number of nodes explored.
- */
 function aStarSearch(useEmpathy) {
   const visited = Array(rows)
     .fill()
@@ -460,13 +421,6 @@ function aStarSearch(useEmpathy) {
   let totalCost = 0;
   const queue = [];
 
-  /**
-   * Calculates the Manhattan distance heuristic for a given cell.
-   *
-   * @param {number} row - The row index of the cell.
-   * @param {number} col - The column index of the cell.
-   * @return {number} The Manhattan distance from the cell to the end cell.
-   */
   function heuristic(row, col) {
     return Math.abs(row - endCell.row) + Math.abs(col - endCell.col);
   }
@@ -537,7 +491,6 @@ function aStarSearch(useEmpathy) {
   return { pathFound, path, cost: totalCost, nodesExplored };
 }
 
-// Results and Visualization
 function runAlgorithms() {
   if (!startCell || !endCell) {
     alert("Please set start and end points first");
@@ -558,12 +511,6 @@ function runAlgorithms() {
   visualizePaths();
 }
 
-/**
- * Runs a single pathfinding algorithm on the grid, clearing previous paths and displaying the results.
- *
- * @param {string} algorithm - The name of the algorithm to run (depth-first, best-first, or a-star)
- * @return {void}
- */
 function runSingleAlgorithm(algorithm) {
   if (!startCell || !endCell) {
     alert("Please set start and end points first");
@@ -587,11 +534,6 @@ function runSingleAlgorithm(algorithm) {
   animateAlgorithmPaths(algorithm);
 }
 
-/**
- * Displays the results of the pathfinding algorithms, including path found, path length, path cost, and nodes explored, for both normal and empathy modes.
- *
- * @return {void}
- */
 function displayResults() {
   for (const algorithm in algorithmResults) {
     const statsElement = document.getElementById(`${algorithm}-stats`);
@@ -654,14 +596,6 @@ function visualizePaths() {
   }
 }
 
-/**
- * Adds CSS classes to the elements in the grid that represent the path found by a pathfinding algorithm.
- *
- * @param {array} path - The path found by the algorithm, represented as an array of objects with row and col properties.
- * @param {string} algorithm - The name of the algorithm that found the path.
- * @param {boolean} useEmpathy - Whether to use empathy costs or regular costs for the algorithm.
- * @return {void}
- */
 function addPathClasses(path, algorithm, useEmpathy) {
   path.forEach(({ row, col }) => {
     if (!grid[row][col].isStart && !grid[row][col].isEnd) {
@@ -730,7 +664,6 @@ function animatePath(path, algorithm, useEmpathy) {
   animateStep();
 }
 
-// Utility Functions
 function clearMap() {
   grid.forEach((row) =>
     row.forEach((cell) => {
@@ -782,3 +715,21 @@ function clearPaths() {
     })
   );
 }
+
+document.addEventListener(
+  "dblclick",
+  function (e) {
+    e.preventDefault();
+  },
+  { passive: false }
+);
+
+document.addEventListener(
+  "touchstart",
+  function (e) {
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+  },
+  { passive: false }
+);

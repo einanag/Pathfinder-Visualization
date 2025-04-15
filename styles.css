@@ -9,6 +9,7 @@ body {
   line-height: 1.6;
   padding: 20px;
   background-color: #f5f5f5;
+  -webkit-text-size-adjust: 100%;
 }
 
 .container {
@@ -94,6 +95,8 @@ button:hover {
   justify-content: center;
   margin-bottom: 20px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
 }
 
 #grid {
@@ -115,6 +118,7 @@ button:hover {
   background-size: cover;
   background-position: center;
   border: 1px solid #ccc;
+  touch-action: manipulation;
 }
 
 .cell-cost {
@@ -127,7 +131,6 @@ button:hover {
   border-radius: 3px;
 }
 
-/*animated paths */
 .path {
   background-color: rgba(255, 223, 0, 0.4) !important;
   border: 2px solid #ffd700 !important;
@@ -145,7 +148,6 @@ button:hover {
   }
 }
 
-/*  algorithms, path styles */
 .depth-first {
   background-color: rgba(52, 152, 219, 0.5) !important;
   border: 3px solid #2980b9 !important;
@@ -181,8 +183,6 @@ button:hover {
   border: 3px dashed #c0392b !important;
   z-index: 1;
 }
-
-/* colors,  terrain costs */
 
 .start {
   background-color: #4caf50;
@@ -352,12 +352,35 @@ button:hover {
 }
 
 @media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  .container {
+    padding: 10px;
+  }
+
   .controls {
     flex-direction: column;
   }
 
+  .control-group {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  button,
+  select {
+    padding: 10px;
+    min-height: 40px;
+  }
+
   .cell {
-    width: 30px;
-    height: 30px;
+    width: 25px;
+    height: 25px;
+  }
+
+  .cell-cost {
+    font-size: 8px;
   }
 }
