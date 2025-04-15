@@ -1,5 +1,6 @@
 # Pathfinder Visualization
 
+[➡️ Click to try it out](https://einanag.github.io/Pathfinder-Visualization/) 
 
 University project developed for the Artificial Intelligence and empirical systems course in my Master's program. This interactive tool visualizes pathfinding algorithms with dynamic empathy-based cost adjustments.
 
